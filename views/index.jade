@@ -1,5 +1,70 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  .navbar.navbar-default
+    .container
+      .navbar-header
+        button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#navbar-collapse")
+        a.navbar-brand(href="/") Roadtrip
+      .collapse.navbar-collapse#navbar-collapse
+        form.navbar-form.navbar-right
+          .form-group
+            label(for="from") From
+            input.form-control(type="text", name="from", id="from")
+          .form-group
+            label(for="to") To
+            input.form-control(type="text", name="to", id="to")
+          button.btn.btn-primary(type="submit", id="submitRoute") Submit
+  #map
+
+block extra_scripts
+  script(src='https://maps.googleapis.com/maps/api/js?v=3.exp')
+  script.
+    var map;
+    var directionsDisplay;
+    var directionsService = new google.maps.DirectionsService();
+
+    function initialize() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 7,
+        center: new google.maps.LatLng(41.850033, -87.6500523),
+      });
+
+      directionsDisplay = new google.maps.DirectionsRenderer();
+      directionsDisplay.setMap(map);
+      //directionsDisplay.setPanel(document.getElementById('directions'));
+    }
+
+    function calcRoute() {
+      var start = document.getElementById('from').value;
+      var end = document.getElementById('to').value;
+      var request = {
+        origin: start,
+        destination: end,
+        travelMode: google.maps.TravelMode.DRIVING
+      };
+      directionsService.route(request, function(response, status) {
+        if (status == google.maps.DirectionsStatus.OK) {
+          directionsDisplay.setDirections(response);
+
+          // we don't look at alternative routes, and, because we
+          // avoid waypoints, we only have a single leg in the journey
+          steps = response.routes[0].legs[0].steps;
+          if (steps) {
+            for (var i = 0; i < steps.length; i++) {
+              console.log(steps[i].start_location);
+            }
+          }          
+        }
+      });
+    }
+
+    google.maps.event.addDomListener(window, 'load', initialize);
+
+    $('#submitRoute').click(function(event) {
+      event.preventDefault();
+      calcRoute();
+    });
+    
+
+      

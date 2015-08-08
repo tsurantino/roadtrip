@@ -1,8 +1,28 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+html, body, #map {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-a {
-  color: #00B7FF;
+.navbar {
+  margin-bottom: 0;
+}
+
+.navbar-form input, button {
+  margin: 0 5px;
+}
+
+/*#map {
+  margin-right: 410px;
+}
+
+#directions {
+  float: right;
+  height: 100%;
+  width: 400px;
+  overflow: auto;
+}*/
+
+@media print {
+  /* might be useful */
 }
