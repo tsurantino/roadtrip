@@ -81,7 +81,6 @@ block extra_scripts
             distance = 0;
             for (var i = 0; i < steps.length; i++) {
               for (var j = 0; j < steps[i].path.length; j++) {
-                // lattitudes along a path
                 console.log(steps[i].path[j]);
               }
             }
@@ -96,19 +95,3 @@ block extra_scripts
       event.preventDefault();
       calcRoute();
     });
-    
-    function getCity(location, i) {
-      setTimeout(function () {
-        geocoder.geocode({'location': location}, function(results, status) {
-          console.log(status);
-          if (status == google.maps.GeocoderStatus.OK && results[1]) {
-            $.each(results, function(i, address) {
-              if (address.types[0] == 'locality')
-                console.log(address.formatted_address);
-            });
-          }
-        });
-      }, i * 2000);
-    }
-
-      
