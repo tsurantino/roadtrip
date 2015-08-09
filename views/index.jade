@@ -19,17 +19,32 @@ block content
 
 block extra_scripts
   script(src='https://maps.googleapis.com/maps/api/js?v=3.exp')
+  script(src="https://maps.googleapis.com/maps/api/js?libraries=places")
   script.
     var map;
     var directionsDisplay;
     var directionsService = new google.maps.DirectionsService();
+    var geocoder = new google.maps.Geocoder();
 
     function initialize() {
+      // autocomplete
+      var from_autocomplete = new google.maps.places.Autocomplete(
+        document.getElementById('from'), 
+        { types: ['(cities)'], }
+      );
+
+      var to_autocomplete = new google.maps.places.Autocomplete(
+        document.getElementById('to'), 
+        { types: ['(cities)'], }
+      );
+
+      // map
       map = new google.maps.Map(document.getElementById('map'), {
         zoom: 7,
         center: new google.maps.LatLng(41.850033, -87.6500523),
       });
 
+      // directions
       directionsDisplay = new google.maps.DirectionsRenderer();
       directionsDisplay.setMap(map);
       //directionsDisplay.setPanel(document.getElementById('directions'));
@@ -38,6 +53,7 @@ block extra_scripts
     function calcRoute() {
       var start = document.getElementById('from').value;
       var end = document.getElementById('to').value;
+
       var request = {
         origin: start,
         destination: end,
@@ -51,8 +67,11 @@ block extra_scripts
           // avoid waypoints, we only have a single leg in the journey
           steps = response.routes[0].legs[0].steps;
           if (steps) {
+            distance = 0;
             for (var i = 0; i < steps.length; i++) {
-              console.log(steps[i].start_location);
+              for (var j = 0; j < steps[i].path.length; j++) {
+                console.log(steps[i].path[j]);
+              }
             }
           }          
         }
@@ -66,5 +85,18 @@ block extra_scripts
       calcRoute();
     });
     
+    function getCity(location, i) {
+      setTimeout(function () {
+        geocoder.geocode({'location': location}, function(results, status) {
+          console.log(status);
+          if (status == google.maps.GeocoderStatus.OK && results[1]) {
+            $.each(results, function(i, address) {
+              if (address.types[0] == 'locality')
+                console.log(address.formatted_address);
+            });
+          }
+        });
+      }, i * 2000);
+    }
 
       
