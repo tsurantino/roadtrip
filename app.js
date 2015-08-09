@@ -31,7 +31,7 @@ app.get('/', function(req, res, next) {
 
 app.get('/nearby-cities', function(req, res) {
   locTree(function (locTree) {
-    console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1));
+    console.log(locTree.nearest({ x: 43.723433, y: -79.473587 }, 1));
     res.redirect('/');
   })
 });
