@@ -21,10 +21,21 @@ block extra_scripts
   script(src='https://maps.googleapis.com/maps/api/js?v=3.exp')
   script(src="https://maps.googleapis.com/maps/api/js?libraries=places")
   script.
+    var initialLoc;
     var map;
     var directionsDisplay;
     var directionsService = new google.maps.DirectionsService();
     var geocoder = new google.maps.Geocoder();
+
+    function getLoc(next) {
+      var geoSuccess = function(position) {
+        initialLoc = position;
+        next();
+      }
+
+      // initial loc
+      navigator.geolocation.getCurrentPosition(geoSuccess);
+    }
 
     function initialize() {
       // autocomplete
@@ -41,7 +52,7 @@ block extra_scripts
       // map
       map = new google.maps.Map(document.getElementById('map'), {
         zoom: 7,
-        center: new google.maps.LatLng(41.850033, -87.6500523),
+        center: new google.maps.LatLng(initialLoc.coords.latitude, initialLoc.coords.longitude),
       });
 
       // directions
@@ -78,7 +89,7 @@ block extra_scripts
       });
     }
 
-    google.maps.event.addDomListener(window, 'load', initialize);
+    google.maps.event.addDomListener(window, 'load', getLoc(initialize));
 
     $('#submitRoute').click(function(event) {
       event.preventDefault();
