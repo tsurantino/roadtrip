@@ -4,8 +4,13 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var fs = require('fs');
-var lazy = require('lazy');
+var locTree = require('./lib/locTree');
+
+locTree(function(locTree) {
+  console.log('Testing...')
+  console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1));
+})
+
 var app = express();
 
 // view engine setup
@@ -25,17 +30,10 @@ app.get('/', function(req, res, next) {
 });
 
 app.get('/nearby-cities', function(req, res) {
-  new lazy(fs.createReadStream(path.join(__dirname, '../', 'public/files/cities15000.txt')))
-    .lines
-    .forEach(function(line) {
-      line = line.toString().split("\t");
-
-      if (line[8] == 'CA')
-        console.log(line[8] + ': ' + line[1] + '\t\t' + line[4] + '\t' + line[5]);
-    }
-  );
-
-  res.redirect('/');
+  locTree(function (locTree) {
+    console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1));
+    res.redirect('/');
+  })
 });
 
 // catch 404 and forward to error handler
