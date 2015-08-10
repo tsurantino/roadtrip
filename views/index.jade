@@ -50,7 +50,7 @@ block extra_scripts
 
       // map
       map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 7,
+        zoom: 10,
         center: new google.maps.LatLng(initialLoc.coords.latitude, initialLoc.coords.longitude),
       });
 
@@ -58,9 +58,45 @@ block extra_scripts
       directionsDisplay = new google.maps.DirectionsRenderer();
       directionsDisplay.setMap(map);
       //directionsDisplay.setPanel(document.getElementById('directions'));
+
+      // markers
+      addMarkers(sampleData = [
+        {
+          title: 'Kintako Japanese Restaurant',
+          img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
+          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
+          coords: [43.711754, -79.364118],
+          url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
+          brief_descrip: 'Dinner started with a free noodle soup was so good we had to ask for seconds (which they most generously provided)',
+          type: 'restaurant',
+        },
+        {
+          title: 'Sudbury',
+          img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
+          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
+          coords: [43.642211, -79.421912],
+          url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
+          brief_descrip: 'Dinner started with a free noodle soup was so good we had to ask for seconds (which they most generously provided)',
+          type: 'attraction',
+        },
+        {
+          title: 'Kingston',
+          img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
+          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
+          coords: [43.689214, -79.268691],
+          url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
+          brief_descrip: 'Dinner started with a free noodle soup was so good we had to ask for seconds (which they most generously provided)',
+          type: 'restaurant',
+        },
+      ]);
     }
 
     function calcRoute() {
+      clearMarkers();
+
       var start = document.getElementById('from').value;
       var end = document.getElementById('to').value;
 
@@ -100,12 +136,64 @@ block extra_scripts
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data, status) {
-          console.log(status + ': ' + data);
+          console.log(status + ': ' + JSON.stringify(data));
         },
         error: function(jqXHR, status, error) {
           console.log(status + ': ' + error);
         }
       });
+    }
+
+    markers = [];
+    function addMarkers(locationData) {
+      locationData.forEach(function(location, i) {
+        var infoWindow = new google.maps.InfoWindow({
+          content:
+            '<div class="container-fluid">' +
+              '<h3>' + location.title + '</h3>' +
+              '<div class="row">' +
+                '<div class="col-sm-2">' +
+                  '<img class="img-responsive" src="' + location.img_url + '">' +
+                '</div>' +
+                '<div class="col-sm-9">' +
+                  '<p><img src="' + location.rating_url + '"></p>' +
+                  '<p><strong>Address: </strong>' + location.address + '</p>' +
+                  '<p><strong>Description: </strong>' + location.brief_descrip + '</p>' +
+                '</div>' +
+              '</div>' +
+              '<hr>' +
+              '<div class="row">' +
+                '<div class="col-sm-12">' +
+                  '<p>Learn more by visiting: <a href="' + location.url + '">' + location.url + '</a></p>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+        });
+
+        // set a delayed time out on each marker
+        window.setTimeout(function() {
+          var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(location.coords[0], location.coords[1]),
+            map: map,
+            title: location.title,
+            animation: google.maps.Animation.DROP,
+            /*icon: '/images/' + location.type + '.png',*/
+          });
+
+          google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.open(map, marker);
+          });
+
+          markers.push(marker);
+        }, i * 200);
+      });
+    }
+
+    function clearMarkers() {
+      markers.forEach(function(marker) {
+        marker.setMap(null);
+      })
+      markers = [];
     }
 
     google.maps.event.addDomListener(window, 'load', getLoc(initialize));

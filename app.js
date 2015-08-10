@@ -49,8 +49,7 @@ app.post('/nearby-cities', function(req, res) {
     });
 
     Object.keys(unique_cities).forEach(function(city) {
-      console.log(city);
-      /*yelp.search({
+      yelp.search({
         category_filter: 'food,restaurants',
         location: city, 
         limit: 3, 
@@ -71,16 +70,11 @@ app.post('/nearby-cities', function(req, res) {
                 location: business.location.display_address.join(', '),
               }
             });
-            console.log(results);
+            unique_cities[city] = results;
           }
         }
-      });*/
+      });
     });
-    
-    res.contentType('json');
-    res.status(200);
-    res.send('Success!');  
-    
   });
 });
 
