@@ -20,7 +20,7 @@ app.set('view engine', 'jade');
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,11 +29,28 @@ app.get('/', function(req, res, next) {
   res.render('index');
 });
 
-app.get('/nearby-cities', function(req, res) {
+app.post('/nearby-cities', function(req, res) {
+  console.log('Received request.');
+  
+  
   locTree(function (locTree) {
-    console.log(locTree.nearest({ x: 43.723433, y: -79.473587 }, 1));
-    res.redirect('/');
-  })
+    result = {};
+
+    console.log(req.body.paths.length);
+    req.body.paths.forEach(function(path) {
+      city = locTree.nearest({ x: path.x, y: path.y }, 1)[0][0].city;
+
+      if (!(city in result))
+        result[city] = city;
+    });
+
+    console.log(Object.keys(result));
+    
+    res.contentType('json');
+    res.status(200);
+    res.send('Success!');  
+    
+  });
 });
 
 // catch 404 and forward to error handler

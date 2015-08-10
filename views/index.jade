@@ -77,13 +77,33 @@ block extra_scripts
           // avoid waypoints, we only have a single leg in the journey
           steps = response.routes[0].legs[0].steps;
           if (steps) {
-            distance = 0;
+            paths = [];
             for (var i = 0; i < steps.length; i++) {
               for (var j = 0; j < steps[i].path.length; j++) {
-                console.log(steps[i].path[j]);
+                //console.log(steps[i].path[j]);
+                paths.push({
+                  x: steps[i].path[j].G,
+                  y: steps[i].path[j].K,
+                });
               }
             }
+            getNearbyPlaces(paths);
           }          
+        }
+      });
+    }
+
+    function getNearbyPlaces(paths) {
+      $.ajax('http://localhost:3000/nearby-cities', {
+        type: 'POST',
+        data: JSON.stringify({paths: paths}),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(data, status) {
+          console.log(status + ': ' + data);
+        },
+        error: function(jqXHR, status, error) {
+          console.log(status + ': ' + error);
         }
       });
     }
