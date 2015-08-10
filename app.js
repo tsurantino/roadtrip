@@ -8,7 +8,7 @@ var locTree = require('./lib/locTree');
 
 locTree(function(locTree) {
   console.log('Testing...')
-  console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1));
+  console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1, 10));
 })
 
 var app = express();
@@ -34,14 +34,15 @@ app.post('/nearby-cities', function(req, res) {
   
   
   locTree(function (locTree) {
-    result = {};
-
-    console.log(req.body.paths.length);
     req.body.paths.forEach(function(path) {
-      city = locTree.nearest({ x: path.x, y: path.y }, 1)[0][0].city;
+      results = locTree.nearest({ x: path.x, y: path.y }, 1, 10);
 
-      if (!(city in result))
-        result[city] = city;
+      if (results.length > 0) {
+        city = results[0][0].city;
+
+        if (!(city in result))
+          result[city] = city;
+      }
     });
 
     console.log(Object.keys(result));
