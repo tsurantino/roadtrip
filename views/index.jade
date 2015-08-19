@@ -139,7 +139,8 @@ block extra_scripts
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data, status) {
-          console.log(status + ': ' + JSON.stringify(data));
+          console.log(status);
+          processResults(data["results"]);
         },
         error: function(jqXHR, status, error) {
           alert(status + ': ' + error);
@@ -147,14 +148,13 @@ block extra_scripts
       });
     }
 
-    function geocodeResults(results) {
+    function processResults(results) {
       processed = [];
       results.forEach(function(result) {
         result.forEach(function(location) {
-
+          processed.push(location);
         });
       });
-
       addMarkers(processed);
     }
 
@@ -165,13 +165,15 @@ block extra_scripts
         var infoWindow = new google.maps.InfoWindow({
           content:
             '<div class="container-fluid">' +
-              '<h3>' + location.title + '</h3>' +
+              '<h3>' + location.name + '</h3>' +
               '<div class="row">' +
-                '<div class="col-sm-2">' +
-                  '<img class="img-responsive" src="' + location.img_url + '">' +
+                '<div class="col-sm-3">' +
+                  '<div class="thumbnail">' +
+                    '<img class="img-responsive" src="' + location.img_url + '">' +
+                  '</div>' +
                 '</div>' +
                 '<div class="col-sm-9">' +
-                  '<p><img src="' + location.rating_url + '"></p>' +
+                  '<p><img src="' + location.rating_img_url + '"></p>' +
                   '<p><strong>Address: </strong>' + location.address + '</p>' +
                   '<p><strong>Description: </strong>' + location.brief_descrip + '</p>' +
                 '</div>' +

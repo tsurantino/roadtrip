@@ -5,11 +5,15 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var Q = require('q');
+var sleep = require('sleep');
 var yelp = require("yelp").createClient({
   consumer_key: "B6bWEcfpjbithTKt2uuGvg", 
   consumer_secret: "fxEsn1IZ2-G2E4q-OrXp6B0jCew",
   token: "EEAB9_3JVCCrMAnAHexPqPoCCRpEQ7Li",
   token_secret: "g0F3MtRIHoV8bFSXyyfO4OyBCfg"
+});
+var geocoder = require('node-geocoder')('google', 'https', {
+  apiKey: 'AIzaSyB4tDa4-7VKVx4ylY6DfRTlRafBczwKnII',
 });
 
 var locTree = require('./lib/locTree');
@@ -51,42 +55,60 @@ app.post('/nearby-cities', function(req, res) {
 
     queries = [];
     Object.keys(unique_cities).forEach(function(city) {
-      queries.push(
-        Q.Promise(function(resolve, reject, notify) {
-          yelp.search({
-            category_filter: 'food,restaurants',
-            location: city, 
-            limit: 3, 
-            sort: 2, // sort mode: 2=Highest Rated
-          }, function(error, data) {
-            if (error) {
-              reject(new Error(error));
+      queries.push(Q.Promise(function(resolve, reject, notify) {
+        yelp.search({
+          category_filter: 'food,restaurants',
+          location: city, 
+          limit: 3, 
+          sort: 2, // sort mode: 2=Highest Rated
+        }, function(error, data) {
+          if (error) {
+            reject(new Error(error));
+          }
+          else {
+            if (data['businesses'] && data['businesses'].length > 0) {
+              // we only need some of the properties of a Yelp business result
+              geoQueries = [];
+              results = data['businesses'].map(function(business) {
+                geoQueries.push(Q.Promise(function(resolve, reject, notify) {
+                  // sleep for 0.5 seconds so as not to get throttled by google
+                  sleep.usleep(500000); 
+
+                  address = business.location.display_address.join(', ');
+                  geocoder.geocode(address)
+                  .then(function(res) {
+                    resolve({
+                      img_url: business.image_url,
+                      name: business.name,
+                      url: business.url,
+                      rating_img_url: business.rating_img_url,
+                      address: address,
+                      brief_descrip: 'Lorem ipsum...',
+                      coords: [res[0]['latitude'], res[0]['longitude']],
+                    });
+                  })
+                  .catch(function(err) {
+                    console.log('Could not geocode: ' + err);
+                    return;
+                  });
+                }));
+              });
+
+              Q.all(geoQueries)
+              .then(function(data) {
+                resolve(data);
+              });
             }
-            else {
-              if (data['businesses'] && data['businesses'].length > 0) {
-                // we only need some of the properties of a Yelp business result
-                results = data['businesses'].map(function(business) {
-                  return {
-                    image_url: business.image_url,
-                    name: business.name,
-                    url: business.url,
-                    rating_img_url: business.rating_img_url,
-                    location: business.location.display_address.join(', '),
-                  }
-                });
-                resolve(results);
-              }
-            }
-          });
-        })
-      )
+          }
+        });
+      }));
     });
 
     Q.all(queries)
-      .then(function(data) {
-        console.log(JSON.stringify(data, null, 2));
-        res.json({'results': data})
-      })
+    .then(function(data) {
+      console.log(JSON.stringify(data, null, 2));
+      res.json({'results': data})
+    });
   });
 });
 
