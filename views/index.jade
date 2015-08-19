@@ -92,6 +92,9 @@ block extra_scripts
           type: 'restaurant',
         },
       ]);
+
+      // geocoder
+      geocoder = new google.maps.Geocoder();
     }
 
     function calcRoute() {
@@ -139,13 +142,25 @@ block extra_scripts
           console.log(status + ': ' + JSON.stringify(data));
         },
         error: function(jqXHR, status, error) {
-          console.log(status + ': ' + error);
+          alert(status + ': ' + error);
         }
       });
     }
 
+    function geocodeResults(results) {
+      processed = [];
+      results.forEach(function(result) {
+        result.forEach(function(location) {
+
+        });
+      });
+
+      addMarkers(processed);
+    }
+
     markers = [];
     function addMarkers(locationData) {
+      clearMarkers();
       locationData.forEach(function(location, i) {
         var infoWindow = new google.maps.InfoWindow({
           content:

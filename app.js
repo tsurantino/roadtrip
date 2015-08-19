@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var Q = require('q');
 var yelp = require("yelp").createClient({
   consumer_key: "B6bWEcfpjbithTKt2uuGvg", 
   consumer_secret: "fxEsn1IZ2-G2E4q-OrXp6B0jCew",
@@ -48,33 +49,44 @@ app.post('/nearby-cities', function(req, res) {
       }
     });
 
+    queries = [];
     Object.keys(unique_cities).forEach(function(city) {
-      yelp.search({
-        category_filter: 'food,restaurants',
-        location: city, 
-        limit: 3, 
-        sort: 2, // sort mode: 2=Highest Rated
-      }, function(error, data) {
-        if (error) {
-          console.log(error);
-        }
-        else {
-          if (data['businesses'] && data['businesses'].length > 0) {
-            // we only need some of the properties of a Yelp business result
-            results = data['businesses'].map(function(business) {
-              return {
-                image_url: business.image_url,
-                name: business.name,
-                url: business.url,
-                rating_img_url: business.rating_img_url,
-                location: business.location.display_address.join(', '),
+      queries.push(
+        Q.Promise(function(resolve, reject, notify) {
+          yelp.search({
+            category_filter: 'food,restaurants',
+            location: city, 
+            limit: 3, 
+            sort: 2, // sort mode: 2=Highest Rated
+          }, function(error, data) {
+            if (error) {
+              reject(new Error(error));
+            }
+            else {
+              if (data['businesses'] && data['businesses'].length > 0) {
+                // we only need some of the properties of a Yelp business result
+                results = data['businesses'].map(function(business) {
+                  return {
+                    image_url: business.image_url,
+                    name: business.name,
+                    url: business.url,
+                    rating_img_url: business.rating_img_url,
+                    location: business.location.display_address.join(', '),
+                  }
+                });
+                resolve(results);
               }
-            });
-            unique_cities[city] = results;
-          }
-        }
-      });
+            }
+          });
+        })
+      )
     });
+
+    Q.all(queries)
+      .then(function(data) {
+        console.log(JSON.stringify(data, null, 2));
+        res.json({'results': data})
+      })
   });
 });
 
