@@ -140,7 +140,7 @@ block extra_scripts
 
     function getNearbyPlaces(paths) {
       $('#loading-alert').fadeIn();
-      $.ajax('http://localhost:3000/nearby-cities', {
+      $.ajax('/nearby-cities', {
         type: 'POST',
         data: JSON.stringify({paths: paths}),
         contentType: "application/json; charset=utf-8",
