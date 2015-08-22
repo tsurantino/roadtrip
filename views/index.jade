@@ -24,7 +24,7 @@ block content
             img.select-category#entertainment(data-status="on", src="/images/pins/entertainment_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show entertainment")
           button.btn.btn-danger(type="submit", id="submitRoute") Generate
-    #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
+    #loading-alert.alert.alert-default.alert-loading
       .alert-default-content
         .container.text-center.
           #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
@@ -38,9 +38,15 @@ block content
     .modal-dialog
       .modal-content
         .modal-body
-          .text-center
-            h1.title(style="margin-bottom:20px;") Road Trip
-          p Test text
+          .text-center: h1.title Road Trip
+          p Discover great places along your trip. Road Trip uses Google Maps and Yelp to create a route and show you top-rated spots on the way to your destination.
+          h4 Add Your Route
+          p Start by adding your starting location and your destination. We use Google Places to suggest cities for you to use.
+          h4 Select Your Categories
+          p Select from four place categories to populate the map. We'll add top rated locations close to your route. 
+          h4 Generate Your Trip
+          p Click generate to create an itinerary. You'll need to be patient, as Road Trip is working with Google and Yelp's data to generate and place markers on the map. 
+          p To learn more about how Road Trip works under the hood, click #[a(href="#") here].
           hr
           .text-center
             button.btn.btn-success(data-dismiss="modal") Sounds good, let's go!          
@@ -48,8 +54,15 @@ block content
 block extra_scripts
   script(src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places")
   script.
-    //$('#intro').modal({show: true});
-
+    // intro
+    if(typeof(Storage) !== "undefined") {
+      shownIntro = localStorage.getItem("shownIntro");
+      if (!shownIntro) {
+        $('#intro').modal({show: true});
+        localStorage.setItem("shownIntro", true);    
+      }
+    }
+    
     var initialLoc;
     var map;
     var paths;

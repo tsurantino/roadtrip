@@ -52,12 +52,15 @@ html, body, #map {
   z-index: 1;
 }
 
-.thin-alert {
+.alert-loading {
   padding: 0.8em 0;
+  margin: 0;
+  display: none;
 }
 
-.no-margin {
-  margin: 0;
+#intro h1 {
+  font-size: 5.2em;
+  margin-bottom: 0.5em;
 }
 
 
