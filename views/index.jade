@@ -5,16 +5,21 @@ block content
     .container
       .navbar-header
         button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#navbar-collapse")
-        a.navbar-brand(href="/") Roadtrip
+        a.navbar-brand(href="/") Road Trip
       .collapse.navbar-collapse#navbar-collapse
         form.navbar-form.navbar-right
           .form-group
             label(for="from") From
-            input.form-control(type="text", name="from", id="from")
+            input.form-control(type="text", name="from", id="from", value="Richmond Hill, ON, Canada")
           .form-group
             label(for="to") To
-            input.form-control(type="text", name="to", id="to")
-          button.btn.btn-primary(type="submit", id="submitRoute") Submit
+            input.form-control(type="text", name="to", id="to", value="Markham, ON, Canada")
+          button.btn.btn-danger(type="submit", id="submitRoute") Generate
+  #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
+    .container.text-center.
+      #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
+      We're loading the results for you now... it may take a while depending on the length of the trip.
+      #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
   #map
 
 block extra_scripts
@@ -60,11 +65,11 @@ block extra_scripts
       //directionsDisplay.setPanel(document.getElementById('directions'));
 
       // markers
-      addMarkers(sampleData = [
+      /*addMarkers(sampleData = [
         {
-          title: 'Kintako Japanese Restaurant',
+          name: 'Kintako Japanese Restaurant',
           img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
-          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          rating_img_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
           address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
           coords: [43.711754, -79.364118],
           url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
@@ -74,7 +79,7 @@ block extra_scripts
         {
           title: 'Sudbury',
           img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
-          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          rating_img_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
           address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
           coords: [43.642211, -79.421912],
           url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
@@ -84,14 +89,14 @@ block extra_scripts
         {
           title: 'Kingston',
           img_url: 'http://s3-media3.fl.yelpcdn.com/bphoto/speq8dyeJzlc7KLXj0njqw/ms.jpg',
-          rating_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
+          rating_img_url: 'http://s3-media1.fl.yelpcdn.com/assets/2/www/img/f1def11e4e79/ico/stars/v1/stars_5.png',
           address: '214 Laird Drive, Suite 101, Toronto, ON M4G 3W4, Canada',
           coords: [43.689214, -79.268691],
           url: 'http://www.yelp.ca/biz/kintako-japanese-restaurant-toronto',
           brief_descrip: 'Dinner started with a free noodle soup was so good we had to ask for seconds (which they most generously provided)',
           type: 'restaurant',
         },
-      ]);
+      ]);*/
 
       // geocoder
       geocoder = new google.maps.Geocoder();
@@ -133,6 +138,7 @@ block extra_scripts
     }
 
     function getNearbyPlaces(paths) {
+      $('#loading-alert').fadeIn();
       $.ajax('http://localhost:3000/nearby-cities', {
         type: 'POST',
         data: JSON.stringify({paths: paths}),
@@ -140,7 +146,7 @@ block extra_scripts
         dataType: "json",
         success: function(data, status) {
           console.log(status);
-          processResults(data["results"]);
+          addMarkers(data["results"]);
         },
         error: function(jqXHR, status, error) {
           alert(status + ': ' + error);
@@ -148,62 +154,70 @@ block extra_scripts
       });
     }
 
-    function processResults(results) {
-      processed = [];
-      results.forEach(function(result) {
-        result.forEach(function(location) {
-          processed.push(location);
-        });
-      });
-      addMarkers(processed);
+    markers = [];
+    total = 0;
+    function addMarkers(results) {
+      clearMarkers();
+      for (var i = 0; i < results.length; i++) {
+        for (var j = 0; j < results[i].length; j++) {
+          (function(location, delay) {
+            window.setTimeout(function() {
+              geocoder.geocode({'address': location.address}, function(res, status) {
+                if (status == google.maps.GeocoderStatus.OK) {
+                  location.coords = [res[0].geometry.location.lat(), res[0].geometry.location.lng()];
+                  addMarker(location);
+                } else {
+                  console.log(status + ': ' + res);
+                }
+              }); 
+            }, delay);
+          })(results[i][j], (i + 1) * (j + 1) * 1000);
+          total += 1;
+          $('#total').html(total);
+        }  
+      }
     }
 
-    markers = [];
-    function addMarkers(locationData) {
-      clearMarkers();
-      locationData.forEach(function(location, i) {
-        var infoWindow = new google.maps.InfoWindow({
-          content:
-            '<div class="container-fluid">' +
-              '<h3>' + location.name + '</h3>' +
-              '<div class="row">' +
-                '<div class="col-sm-3">' +
-                  '<div class="thumbnail">' +
-                    '<img class="img-responsive" src="' + location.img_url + '">' +
-                  '</div>' +
-                '</div>' +
-                '<div class="col-sm-9">' +
-                  '<p><img src="' + location.rating_img_url + '"></p>' +
-                  '<p><strong>Address: </strong>' + location.address + '</p>' +
-                  '<p><strong>Description: </strong>' + location.brief_descrip + '</p>' +
+    function addMarker(location) {
+      var infoWindow = new google.maps.InfoWindow({
+        content:
+          '<div class="container-fluid">' +
+            '<h3>' + location.name + '</h3>' +
+            '<div class="row">' +
+              '<div class="col-sm-3">' +
+                '<div class="thumbnail">' +
+                  '<img class="img-responsive" src="' + location.img_url + '">' +
                 '</div>' +
               '</div>' +
-              '<hr>' +
-              '<div class="row">' +
-                '<div class="col-sm-12">' +
-                  '<p>Learn more by visiting: <a href="' + location.url + '">' + location.url + '</a></p>' +
-                '</div>' +
+              '<div class="col-sm-9">' +
+                '<p><img src="' + location.rating_img_url + '"> (' + location.review_count + ' reviews)</p>' +
+                '<p><strong>Address: </strong>' + location.address + '</p>' +
+                '<p><strong>Description: </strong>' + location.brief_descrip + '</p>' +
               '</div>' +
-            '</div>'
-        });
-
-        // set a delayed time out on each marker
-        window.setTimeout(function() {
-          var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(location.coords[0], location.coords[1]),
-            map: map,
-            title: location.title,
-            animation: google.maps.Animation.DROP,
-            /*icon: '/images/' + location.type + '.png',*/
-          });
-
-          google.maps.event.addListener(marker, 'click', function() {
-            infoWindow.open(map, marker);
-          });
-
-          markers.push(marker);
-        }, i * 200);
+            '</div>' +
+            '<hr>' +
+            '<div class="row">' +
+              '<div class="col-sm-12">' +
+                '<p>Learn more by visiting: <a href="' + location.url + '">' + location.url + '</a></p>' +
+              '</div>' +
+            '</div>' +
+          '</div>'
       });
+
+      var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(location.coords[0], location.coords[1]),
+        map: map,
+        title: location.title,
+        animation: google.maps.Animation.DROP,
+        /*icon: '/images/' + location.type + '.png',*/
+      });
+
+      google.maps.event.addListener(marker, 'click', function() {
+        infoWindow.open(map, marker);
+      });
+
+      markers.push(marker);
+      updateProgress();
     }
 
     function clearMarkers() {
@@ -211,6 +225,17 @@ block extra_scripts
         marker.setMap(null);
       })
       markers = [];
+      total = 0;
+    }
+
+    function updateProgress() {
+      $('#progress').show();
+      $('#current').html(markers.length);
+      if (markers.length == total) {
+        $('#progress').hide();
+        $('#current').html(0);
+        $('#loading-alert').fadeOut();
+      }
     }
 
     google.maps.event.addDomListener(window, 'load', getLoc(initialize));

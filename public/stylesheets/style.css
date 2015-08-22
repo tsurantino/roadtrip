@@ -1,11 +1,33 @@
+@import url(http://fonts.googleapis.com/css?family=Pacifico);
+
 html, body, #map {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
+.alert-default {
+  color: #777777;
+  background-color: #e5e5e5;
+  border-color: #bbbbbb;
+  border-radius: 0;
+  position: relative;
+}
+
+.thin-alert {
+  padding: 0.8em 0;
+}
+
+.no-margin {
+  margin: 0;
+}
+
 .navbar {
   margin-bottom: 0;
+}
+
+.navbar-default .navbar-brand {
+  font-family: 'Pacifico', 'Arial', 'sans-serif';
 }
 
 .navbar-form input, button {
