@@ -76,6 +76,7 @@ app.post('/nearby-cities', function(req, res) {
                   review_count: business.review_count,
                   address: business.location.display_address.join(', '),
                   brief_descrip: business.snippet_text,
+                  type: 'restaurant',
                 };
               });
 

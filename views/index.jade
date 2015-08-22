@@ -186,7 +186,7 @@ block extra_scripts
             '<div class="row">' +
               '<div class="col-sm-3">' +
                 '<div class="thumbnail">' +
-                  '<img class="img-responsive" src="' + location.img_url + '">' +
+                  '<img style="width:100%;" src="' + location.img_url + '">' +
                 '</div>' +
               '</div>' +
               '<div class="col-sm-9">' +
@@ -209,7 +209,7 @@ block extra_scripts
         map: map,
         title: location.title,
         animation: google.maps.Animation.DROP,
-        /*icon: '/images/' + location.type + '.png',*/
+        icon: '/images/pins/' + location.type + '_marker.png',
       });
 
       google.maps.event.addListener(marker, 'click', function() {
