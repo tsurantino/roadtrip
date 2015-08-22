@@ -156,26 +156,45 @@ block extra_scripts
     }
 
     markers = [];
-    total = 0;
     function addMarkers(results) {
+      total = 0;
+      usingCache = false;
       clearMarkers();
+
       for (var i = 0; i < results.length; i++) {
         for (var j = 0; j < results[i].length; j++) {
-          (function(location, delay) {
-            window.setTimeout(function() {
-              geocodeViaNominatim(location.address, function(coords) {
-                console.log('In CB: ' + coords);
-                location.coords = coords;
-                if (validPoint(location.coords[0], location.coords[1]))
-                  addMarker(location);
-                else {
-                  total -= 1;
-                  updateProgress();
-                }
+          //console.log(results[i][j]);
+          if (results[i][j].coords) {
+            usingCache = true;
+            total += 1;
+            function addCachedGeocode(location, delay) {
+              window.setTimeout(function() {
+                addMarker(location);
               });
-            }, delay);
-          })(results[i][j], (i + 1) * (j + 1) * 1100);
-          total += 1;
+            }
+            addCachedGeocode(results[i][j], total * 500);  
+          } else {
+            function addFreshGeocode(location, delay) {
+              window.setTimeout(function() {
+                geocodeViaNominatim(location.address, function(coords) {
+                  location.coords = coords;
+                  if (validPoint(location.coords[0], location.coords[1])) {
+                    addMarker(location);
+                    cacheLocation(location);
+                  }
+                  else {
+                    total -= 1;
+                    updateProgress();
+                  }
+                });
+              }, delay);
+            }
+
+            if (!usingCache) {
+              total += 1;
+              addFreshGeocode(results[i][j], total * 1100);
+            }
+          }
         }  
       }
     }
@@ -247,6 +266,7 @@ block extra_scripts
     }
 
     function updateProgress() {
+      console.log(markers.length, total);
       //$('#progress').show();
       //$('#current').html(markers.length);
       //$('#total').html(total);
@@ -255,6 +275,24 @@ block extra_scripts
         $('#current').html(0);
         $('#loading-alert').fadeOut();
       }
+    }
+
+    function cacheLocation(location) {
+      if (location.coords) {
+        $.ajax('/cache', {
+          type: 'POST',
+          data: JSON.stringify({location: location}),
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          success: function(data, status) {
+            console.log(status + ': ' + data);
+          },
+          error: function(jqXHR, status, error) {
+            alert(status + ': ' + error);
+          }
+        });
+      }
+      
     }
 
     google.maps.event.addDomListener(window, 'load', getLoc(initialize));

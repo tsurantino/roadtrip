@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var Q = require('q');
+var cache = require('memory-cache');
 var sleep = require('sleep');
 var yelp = require("yelp").createClient({
   consumer_key: "B6bWEcfpjbithTKt2uuGvg", 
@@ -12,9 +13,7 @@ var yelp = require("yelp").createClient({
   token: "EEAB9_3JVCCrMAnAHexPqPoCCRpEQ7Li",
   token_secret: "g0F3MtRIHoV8bFSXyyfO4OyBCfg"
 });
-var geocoder = require('node-geocoder')('google', 'https', {
-  apiKey: 'AIzaSyALdV0XruqaUzIUz-JJw7wRn82yL4nFjOI',
-});
+
 
 var locTree = require('./lib/locTree');
 locTree(function(locTree) {
@@ -47,7 +46,6 @@ app.post('/nearby-cities', function(req, res) {
       results = locTree.nearest({ x: path.x, y: path.y }, 1, 10);
       if (results.length > 0) {
         city = results[0][0].city;
-
         if (!(city in unique_cities))
           unique_cities[city] = city;
       }
@@ -56,35 +54,42 @@ app.post('/nearby-cities', function(req, res) {
     queries = [];
     Object.keys(unique_cities).forEach(function(city) {
       queries.push(Q.Promise(function(resolve, reject, notify) {
-        yelp.search({
-          category_filter: 'food,restaurants',
-          location: city, 
-          limit: 3, 
-          sort: 2, // sort mode: 2=Highest Rated
-        }, function(error, data) {
-          if (error) {
-            reject(new Error(error));
-          }
-          else {
-            if (data['businesses'] && data['businesses'].length > 0) {
-              results = data['businesses'].map(function(business) {
-                return {
-                  img_url: business.image_url,
-                  name: business.name,
-                  url: business.url,
-                  rating_img_url: business.rating_img_url,
-                  review_count: business.review_count,
-                  address: [business.location.address[0], business.location.city, 
-                    business.location.state_code, business.location.country_code].join(', '),
-                  brief_descrip: business.snippet_text,
-                  type: 'restaurant',
-                };
-              });
-
-              resolve(results);
+        cityData = getFromCache(city)
+        if (cityData) {
+          console.log('Accessing cache');
+          resolve(cityData);
+        } else {
+          yelp.search({
+            category_filter: 'food,restaurants',
+            location: city, 
+            limit: 3, 
+            sort: 2, // sort mode: 2=Highest Rated
+          }, function(error, data) {
+            if (error) {
+              reject(new Error(error));
             }
-          }
-        });
+            else {
+              if (data['businesses'] && data['businesses'].length > 0) {
+                results = data['businesses'].map(function(business) {
+                  return {
+                    img_url: business.image_url,
+                    name: business.name,
+                    url: business.url,
+                    rating_img_url: business.rating_img_url,
+                    review_count: business.review_count,
+                    address: [business.location.address[0], business.location.city, 
+                      business.location.state_code, business.location.country_code].join(', '),
+                    brief_descrip: business.snippet_text,
+                    type: 'restaurant',
+                    city: city,
+                  };
+                });
+
+                resolve(results);
+              }
+            }
+          });
+        }
       }));
     });
 
@@ -95,6 +100,27 @@ app.post('/nearby-cities', function(req, res) {
       res.json({'errorDetails': err});
     });
   });
+});
+
+function getFromCache(city) {
+  return cache.get(city);
+}
+
+app.post('/cache', function(req, res) {
+  city = req.body.location.city;
+
+  cityData = cache.get(city);
+  if (!cityData) {
+    cache.put(city, [req.body.location]);
+  } else {
+    cityData.push(req.body.location);
+    cache.del(city);
+    cache.put(city, cityData)
+  }
+
+  console.log(cache.get(city));
+  
+  res.json('success!');
 });
 
 // catch 404 and forward to error handler

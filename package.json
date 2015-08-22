@@ -12,6 +12,7 @@
     "express": "~4.12.4",
     "jade": "~1.9.2",
     "lazy": "^1.0.11",
+    "memory-cache": "^0.1.4",
     "morgan": "~1.5.3",
     "node-geocoder": "^3.0.0",
     "q": "^1.4.1",
