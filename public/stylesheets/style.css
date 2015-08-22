@@ -6,6 +6,22 @@ html, body, #map {
   padding: 0;
 }
 
+.navbar {
+  margin-bottom: 0;
+}
+
+.navbar-default .navbar-brand {
+  font-family: 'Pacifico', 'Arial', 'sans-serif';
+}
+
+.navbar-form input, button {
+  margin: 0 5px;
+}
+
+.icon-group {
+  display: inline-block;
+}
+
 .alert-default {
   color: #777777;
   background-color: #e5e5e5;
@@ -22,17 +38,6 @@ html, body, #map {
   margin: 0;
 }
 
-.navbar {
-  margin-bottom: 0;
-}
-
-.navbar-default .navbar-brand {
-  font-family: 'Pacifico', 'Arial', 'sans-serif';
-}
-
-.navbar-form input, button {
-  margin: 0 5px;
-}
 
 /*#map {
   margin-right: 410px;
