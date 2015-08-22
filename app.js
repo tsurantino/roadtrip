@@ -40,6 +40,12 @@ app.get('/', function(req, res, next) {
 });
 
 app.post('/nearby-cities', function(req, res) {
+  categoryToYelpFilter = {
+    restaurant: 'food,restaurants',
+    beer: 'nightlife',
+    active: 'active',
+    entertainment: 'arts',
+  }
   locTree(function (locTree) {
     unique_cities = {}
     req.body.paths.forEach(function(path) {
@@ -52,45 +58,50 @@ app.post('/nearby-cities', function(req, res) {
     });
 
     queries = [];
+    categoriesSelected = req.body.categories;
     Object.keys(unique_cities).forEach(function(city) {
-      queries.push(Q.Promise(function(resolve, reject, notify) {
-        cityData = getFromCache(city)
-        if (cityData) {
-          console.log('Accessing cache');
-          resolve(cityData);
-        } else {
-          yelp.search({
-            category_filter: 'food,restaurants',
-            location: city, 
-            limit: 3, 
-            sort: 2, // sort mode: 2=Highest Rated
-          }, function(error, data) {
-            if (error) {
-              reject(new Error(error));
-            }
-            else {
-              if (data['businesses'] && data['businesses'].length > 0) {
-                results = data['businesses'].map(function(business) {
-                  return {
-                    img_url: business.image_url,
-                    name: business.name,
-                    url: business.url,
-                    rating_img_url: business.rating_img_url,
-                    review_count: business.review_count,
-                    address: [business.location.address[0], business.location.city, 
-                      business.location.state_code, business.location.country_code].join(', '),
-                    brief_descrip: business.snippet_text,
-                    type: 'restaurant',
-                    city: city,
-                  };
-                });
+      Object.keys(categoriesSelected).forEach(function(category) {
+        if (categoriesSelected[category] == 1) {
+          queries.push(Q.Promise(function(resolve, reject, notify) {
+            cityData = getFromCache(city)
+            if (cityData) {
+              console.log('Accessing cache');
+              resolve(cityData);
+            } else {
+              yelp.search({
+                category_filter: categoryToYelpFilter[category],
+                location: city, 
+                limit: 3, 
+                sort: 2, // sort mode: 2=Highest Rated
+              }, function(error, data) {
+                if (error) {
+                  reject(new Error(error));
+                }
+                else {
+                  if (data['businesses'] && data['businesses'].length > 0) {
+                    results = data['businesses'].map(function(business) {
+                      return {
+                        img_url: business.image_url,
+                        name: business.name,
+                        url: business.url,
+                        rating_img_url: business.rating_img_url,
+                        review_count: business.review_count,
+                        address: [business.location.address[0], business.location.city, 
+                          business.location.state_code, business.location.country_code].join(', '),
+                        brief_descrip: business.snippet_text,
+                        type: category,
+                        city: city,
+                      };
+                    });
 
-                resolve(results);
-              }
+                    resolve(results);
+                  }
+                }
+              });
             }
-          });
+          }));
         }
-      }));
+      });
     });
 
     Q.all(queries)
@@ -117,8 +128,6 @@ app.post('/cache', function(req, res) {
     cache.del(city);
     cache.put(city, cityData)
   }
-
-  console.log(cache.get(city));
   
   res.json('success!');
 });

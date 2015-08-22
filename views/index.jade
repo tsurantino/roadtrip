@@ -5,7 +5,7 @@ block content
     .container
       .navbar-header
         button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#navbar-collapse")
-        a.navbar-brand(href="/") Road Trip
+        a.navbar-brand.title(href="/") Road Trip
       .collapse.navbar-collapse#navbar-collapse
         form.navbar-form.navbar-right
           .form-group
@@ -14,11 +14,6 @@ block content
           .form-group
             label(for="to") To
             input.form-control(type="text", name="to", id="to", value="", placeholder="New York, NY")
-          .form-group
-            input.form-control(type="hidden", name="restaurant", id="restaurant")
-            input.form-control(type="hidden", name="beer", id="beer")
-            input.form-control(type="hidden", name="active", id="active")
-            input.form-control(type="hidden", name="entertainment", id="entertainment")
           .icon-group
             img.select-category#restaurant(data-status="on", src="/images/pins/restaurant_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show restaurants")
@@ -30,10 +25,13 @@ block content
               data-toggle="tooltip" data-placement="bottom" title="Toggle show entertainment")
           button.btn.btn-danger(type="submit", id="submitRoute") Generate
   #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
-    .container.text-center.
-      #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
-      We're loading the results for you now... it may take a while depending on the length of the trip.
-      #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
+    .alert-default-content
+      .container.text-center.
+        #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
+        We're loading the results for you now... it may take a while depending on the length of the trip.
+        #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
+    .alert-default-progress(style="width:0%;") .
+    
   #map
 
 block extra_scripts
@@ -45,6 +43,13 @@ block extra_scripts
     var directionsDisplay;
     var directionsService = new google.maps.DirectionsService();
     var geocoder = new google.maps.Geocoder();
+
+    var categories = {
+      restaurant: 1,
+      beer: 1,
+      active: 1,
+      entertainment: 1,
+    }
 
     function getLoc(next) {
       var geoSuccess = function(position) {
@@ -156,7 +161,7 @@ block extra_scripts
       $('#loading-alert').fadeIn();
       $.ajax('/nearby-cities', {
         type: 'POST',
-        data: JSON.stringify({paths: paths}),
+        data: JSON.stringify({paths: paths, categories: categories}),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data, status) {
@@ -172,15 +177,14 @@ block extra_scripts
     markers = [];
     function addMarkers(results) {
       total = 0;
-      usingCache = false;
       clearMarkers();
 
       for (var i = 0; i < results.length; i++) {
         for (var j = 0; j < results[i].length; j++) {
+          total += 1;
+
           //console.log(results[i][j]);
           if (results[i][j].coords) {
-            usingCache = true;
-            total += 1;
             function addCachedGeocode(location, delay) {
               window.setTimeout(function() {
                 addMarker(location);
@@ -204,10 +208,7 @@ block extra_scripts
               }, delay);
             }
 
-            if (!usingCache) {
-              total += 1;
-              addFreshGeocode(results[i][j], total * 1100);
-            }
+            addFreshGeocode(results[i][j], total * 1100);
           }
         }  
       }
@@ -280,7 +281,8 @@ block extra_scripts
     }
 
     function updateProgress() {
-      console.log(markers.length, total);
+      $('.alert-default-progress').attr('style', 'width:' + markers.length / total * 100 + '%;')
+
       //$('#progress').show();
       //$('#current').html(markers.length);
       //$('#total').html(total);
@@ -360,14 +362,18 @@ block extra_scripts
     }
 
     $('.select-category').click(function() {
+      id = $(this).attr("id");
       if ($(this).attr("data-status") == "on") {
-        $(this).attr('src', '/images/pins/' + $(this).attr("id") + '_marker_white.png');
+        $(this).attr('src', '/images/pins/' + id + '_marker_white.png');
         $(this).attr("data-status", "off");
+        categories[id] = 0;
       }
       else {
-        $(this).attr('src', '/images/pins/' + $(this).attr("id") + '_marker.png');
+        $(this).attr('src', '/images/pins/' + id + '_marker.png');
         $(this).attr("data-status", "on");
+        categories[id] = 1;
       }
+      console.log(categories);
     });
 
     $(function () {

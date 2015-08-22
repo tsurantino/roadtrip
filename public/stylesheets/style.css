@@ -10,7 +10,7 @@ html, body, #map {
   margin-bottom: 0;
 }
 
-.navbar-default .navbar-brand {
+.title {
   font-family: 'Pacifico', 'Arial', 'sans-serif';
 }
 
@@ -23,11 +23,28 @@ html, body, #map {
 }
 
 .alert-default {
-  color: #777777;
+  color: #5d5d5d;
   background-color: #e5e5e5;
   border-color: #bbbbbb;
   border-radius: 0;
   position: relative;
+  height: 3.2em;
+}
+
+.alert-default-progress {
+  background-color: #c9c9c9;
+  color: #d9d9d9;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.alert-default-content {
+  width: 100%;
+  position: absolute;
+  z-index: 1;
 }
 
 .thin-alert {
