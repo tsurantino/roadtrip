@@ -197,32 +197,32 @@ block extra_scripts
           total += 1;
 
           //console.log(results[i][j]);
-          if (results[i][j].coords) {
+          /*if (results[i][j].coords) {
             function addCachedGeocode(location, delay) {
               window.setTimeout(function() {
                 addMarker(location);
               });
             }
             addCachedGeocode(results[i][j], total * 500);  
-          } else {
-            function addFreshGeocode(location, delay) {
-              window.setTimeout(function() {
-                geocodeViaNominatim(location.address, function(coords) {
-                  location.coords = coords;
-                  if (validPoint(location.coords[0], location.coords[1])) {
-                    addMarker(location);
-                    cacheLocation(location);
-                  }
-                  else {
-                    total -= 1;
-                    updateProgress();
-                  }
-                });
-              }, delay);
-            }
-
-            addFreshGeocode(results[i][j], total * 1100);
+          } else {*/
+          function addFreshGeocode(location, delay) {
+            window.setTimeout(function() {
+              geocodeViaNominatim(location.address, function(coords) {
+                location.coords = coords;
+                if (validPoint(location.coords[0], location.coords[1])) {
+                  addMarker(location);
+                  //cacheLocation(location);
+                }
+                else {
+                  total -= 1;
+                  updateProgress();
+                }
+              });
+            }, delay);
           }
+
+          addFreshGeocode(results[i][j], total * 1100);
+          //}
         }  
       }
     }
