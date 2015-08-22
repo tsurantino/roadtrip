@@ -27,6 +27,7 @@ block extra_scripts
   script.
     var initialLoc;
     var map;
+    var paths;
     var directionsDisplay;
     var directionsService = new google.maps.DirectionsService();
     var geocoder = new google.maps.Geocoder();
@@ -162,20 +163,37 @@ block extra_scripts
         for (var j = 0; j < results[i].length; j++) {
           (function(location, delay) {
             window.setTimeout(function() {
-              geocoder.geocode({'address': location.address}, function(res, status) {
-                if (status == google.maps.GeocoderStatus.OK) {
-                  location.coords = [res[0].geometry.location.lat(), res[0].geometry.location.lng()];
+              geocodeViaNominatim(location.address, function(coords) {
+                console.log('In CB: ' + coords);
+                location.coords = coords;
+                if (validPoint(location.coords[0], location.coords[1]))
                   addMarker(location);
-                } else {
-                  console.log(status + ': ' + res);
+                else {
+                  total -= 1;
+                  updateProgress();
                 }
-              }); 
+              });
             }, delay);
-          })(results[i][j], (i + 1) * (j + 1) * 1000);
+          })(results[i][j], (i + 1) * (j + 1) * 1100);
           total += 1;
-          $('#total').html(total);
         }  
       }
+    }
+
+    function geocodeViaNominatim(address, cb) {
+      $.get('http://nominatim.openstreetmap.org/search?' + $.param({
+          q: address,
+          format: 'json',
+          addressdetails: 1,
+        }), null, function(data, status) {
+        if (data.length > 0) {
+          cb([data[0].lat, data[0].lon]);
+        }
+        else {
+          total -= 1;
+          updateProgress();
+        }
+      });
     }
 
     function addMarker(location) {
@@ -229,8 +247,9 @@ block extra_scripts
     }
 
     function updateProgress() {
-      $('#progress').show();
-      $('#current').html(markers.length);
+      //$('#progress').show();
+      //$('#current').html(markers.length);
+      //$('#total').html(total);
       if (markers.length == total) {
         $('#progress').hide();
         $('#current').html(0);
@@ -244,3 +263,46 @@ block extra_scripts
       event.preventDefault();
       calcRoute();
     });
+
+    function validPoint(lat, lng) {
+      isValid = false;
+      for (var i = 0; i < paths.length - 1; i++) {
+        if(distanceToPathSegment(
+            lat, lng, 
+            paths[i].x, paths[i].y, 
+            paths[i + 1].x, paths[i + 1].y) < 0.05)
+          isValid = true;
+      }
+      return isValid;
+    }
+
+    function distanceToPathSegment(x, y, x1, y1, x2, y2) {
+      var A = x - x1;
+      var B = y - y1;
+      var C = x2 - x1;
+      var D = y2 - y1;
+
+      var dot = A * C + B * D;
+      var len_sq = C * C + D * D;
+      var param = -1;
+      if (len_sq != 0) //in case of 0 length line
+          param = dot / len_sq;
+
+      var xx, yy;
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      }
+      else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      }
+      else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+
+      var dx = x - xx;
+      var dy = y - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    }

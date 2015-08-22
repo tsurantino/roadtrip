@@ -74,7 +74,8 @@ app.post('/nearby-cities', function(req, res) {
                   url: business.url,
                   rating_img_url: business.rating_img_url,
                   review_count: business.review_count,
-                  address: business.location.display_address.join(', '),
+                  address: [business.location.address[0], business.location.city, 
+                    business.location.state_code, business.location.country_code].join(', '),
                   brief_descrip: business.snippet_text,
                   type: 'restaurant',
                 };
