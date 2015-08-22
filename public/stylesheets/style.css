@@ -6,12 +6,17 @@ html, body, #map {
   padding: 0;
 }
 
+#map {
+  margin-top: -54px;
+}
+
 .navbar {
   margin-bottom: 0;
 }
 
 .title {
   font-family: 'Pacifico', 'Arial', 'sans-serif';
+  color: #777;
 }
 
 .navbar-form input, button {

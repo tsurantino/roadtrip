@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  .navbar.navbar-default
+  .navbar.navbar-default.navbar-static-top
     .container
       .navbar-header
         button.navbar-toggle.collapsed(type="button", data-toggle="collapse", data-target="#navbar-collapse")
@@ -24,19 +24,32 @@ block content
             img.select-category#entertainment(data-status="on", src="/images/pins/entertainment_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show entertainment")
           button.btn.btn-danger(type="submit", id="submitRoute") Generate
-  #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
-    .alert-default-content
-      .container.text-center.
-        #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
-        We're loading the results for you now... it may take a while depending on the length of the trip.
-        #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
-    .alert-default-progress(style="width:0%;") .
+    #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
+      .alert-default-content
+        .container.text-center.
+          #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
+          We're loading the results for you now... it may take a while depending on the length of the trip.
+          #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
+      .alert-default-progress(style="width:0%;") .
     
   #map
+
+  #intro.modal.fade
+    .modal-dialog
+      .modal-content
+        .modal-body
+          .text-center
+            h1.title(style="margin-bottom:20px;") Road Trip
+          p Test text
+          hr
+          .text-center
+            button.btn.btn-success(data-dismiss="modal") Sounds good, let's go!          
 
 block extra_scripts
   script(src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places")
   script.
+    //$('#intro').modal({show: true});
+
     var initialLoc;
     var map;
     var paths;
