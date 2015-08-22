@@ -20,10 +20,14 @@ block content
             input.form-control(type="hidden", name="active", id="active")
             input.form-control(type="hidden", name="entertainment", id="entertainment")
           .icon-group
-            img.select-category#restaurant(data-status="on", src="/images/pins/restaurant_marker.png")
-            img.select-category#beer(data-status="on", src="/images/pins/beer_marker.png")
-            img.select-category#active(data-status="on", src="/images/pins/active_marker.png")
-            img.select-category#entertainment(data-status="on", src="/images/pins/entertainment_marker.png")
+            img.select-category#restaurant(data-status="on", src="/images/pins/restaurant_marker.png", 
+              data-toggle="tooltip" data-placement="bottom" title="Toggle show restaurants")
+            img.select-category#beer(data-status="on", src="/images/pins/beer_marker.png", 
+              data-toggle="tooltip" data-placement="bottom" title="Toggle show nightlife")
+            img.select-category#active(data-status="on", src="/images/pins/active_marker.png", 
+              data-toggle="tooltip" data-placement="bottom" title="Toggle show active sites")
+            img.select-category#entertainment(data-status="on", src="/images/pins/entertainment_marker.png", 
+              data-toggle="tooltip" data-placement="bottom" title="Toggle show entertainment")
           button.btn.btn-danger(type="submit", id="submitRoute") Generate
   #loading-alert.alert.alert-default.thin-alert.no-margin(style="display:none;")
     .container.text-center.
@@ -364,4 +368,8 @@ block extra_scripts
         $(this).attr('src', '/images/pins/' + $(this).attr("id") + '_marker.png');
         $(this).attr("data-status", "on");
       }
+    });
+
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
     });
