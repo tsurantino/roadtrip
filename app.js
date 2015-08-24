@@ -122,6 +122,7 @@ app.post('/nearby-cities', function(req, res) {
   });
 });
 
+// this is old code, I am going to think of a different way to do caching
 function getFromCache(city) {
   return cache.get(city);
 }
