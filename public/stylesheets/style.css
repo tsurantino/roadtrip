@@ -6,10 +6,6 @@ html, body, #map {
   padding: 0;
 }
 
-#map {
-  margin-top: -54px;
-}
-
 .navbar {
   margin-bottom: 0;
 }
@@ -17,6 +13,11 @@ html, body, #map {
 .title {
   font-family: 'Pacifico', 'Arial', 'sans-serif';
   color: #777;
+}
+
+.navbar {
+  position: absolute;
+  width: 100%;
 }
 
 .navbar-form input, button {

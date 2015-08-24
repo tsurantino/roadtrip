@@ -29,9 +29,8 @@ block content
         .container.text-center.
           #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
           We're loading the results for you now... it may take a while depending on the length of the trip.
-          #[span#progress(style="display:none;") (Added #[span#current 0] of #[span#total 0])] 
       .alert-default-progress(style="width:0%;") .
-    
+
   #map
 
   #intro.modal.fade
@@ -57,6 +56,7 @@ block extra_scripts
     // intro
     if(typeof(Storage) !== "undefined") {
       shownIntro = localStorage.getItem("shownIntro");
+      console.log(shownIntro);
       if (!shownIntro) {
         $('#intro').modal({show: true});
         localStorage.setItem("shownIntro", true);    
@@ -79,8 +79,7 @@ block extra_scripts
 
     function getLoc(next) {
       var geoSuccess = function(position) {
-        initialLoc = position;
-        next();
+        map.setCenter(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
       }
 
       // initial loc
@@ -102,7 +101,7 @@ block extra_scripts
       // map
       map = new google.maps.Map(document.getElementById('map'), {
         zoom: 10,
-        center: new google.maps.LatLng(initialLoc.coords.latitude, initialLoc.coords.longitude),
+        center: new google.maps.LatLng(39.8282, -98.5795),
       });
 
       // directions
@@ -146,6 +145,8 @@ block extra_scripts
 
       // geocoder
       geocoder = new google.maps.Geocoder();
+
+      getLoc();
     }
 
     function calcRoute() {
@@ -337,7 +338,7 @@ block extra_scripts
       
     }
 
-    google.maps.event.addDomListener(window, 'load', getLoc(initialize));
+    google.maps.event.addDomListener(window, 'load', initialize);
 
     $('#submitRoute').click(function(event) {
       event.preventDefault();
