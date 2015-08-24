@@ -11,7 +11,7 @@ var yelp = require("yelp").createClient({
   consumer_key: process.env.YELP_CONSUMER_KEY, 
   consumer_secret: process.env.YELP_CONSUMER_SECRET,
   token: process.env.YELP_TOKEN,
-  token_secret: process.env.YELP_TOKEN_SECRET
+  token_secret: process.env.YELP_TOKEN_SECRET,
 });
 
 
@@ -72,7 +72,6 @@ app.post('/nearby-cities', function(req, res) {
           queries.push(Q.Promise(function(resolve, reject, notify) {
             cityData = getFromCache(city)
             if (cityData) {
-              console.log('Accessing cache');
               resolve(cityData);
             } else {
               yelp.search({
@@ -82,6 +81,7 @@ app.post('/nearby-cities', function(req, res) {
                 sort: 2, // sort mode: 2=Highest Rated
               }, function(error, data) {
                 if (error) {
+                  console.log(error);
                   reject(new Error(error));
                 }
                 else {

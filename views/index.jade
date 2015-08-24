@@ -15,13 +15,13 @@ block content
             label(for="to") To
             input.form-control(type="text", name="to", id="to", value="", placeholder="New York, NY")
           .icon-group
-            img.select-category#restaurant(data-status="on", src="/images/pins/restaurant_marker.png", 
+            img.select-category#restaurant(src="/images/pins/restaurant_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show restaurants")
-            img.select-category#beer(data-status="on", src="/images/pins/beer_marker.png", 
+            img.select-category#beer(src="/images/pins/beer_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show nightlife")
-            img.select-category#active(data-status="on", src="/images/pins/active_marker.png", 
-              data-toggle="tooltip" data-placement="bottom" title="Toggle show active sites")
-            img.select-category#entertainment(data-status="on", src="/images/pins/entertainment_marker.png", 
+            img.select-category#active(src="/images/pins/active_marker.png", 
+              data-toggle="tooltip" data-placement="bottom" title="Toggle show recreational sites")
+            img.select-category#entertainment(src="/images/pins/entertainment_marker.png", 
               data-toggle="tooltip" data-placement="bottom" title="Toggle show entertainment")
           button.btn.btn-danger(type="submit", id="submitRoute") Generate
     #loading-alert.alert.alert-default.alert-loading
@@ -29,7 +29,7 @@ block content
         .container.text-center.
           #[strong #[i.fa.fa-spinner.fa-pulse] Heads up!] 
           We're loading the results for you now... it may take a while depending on the length of the trip.
-      .alert-default-progress(style="width:0%;") .
+      .alert-default-progress .
 
   #map
 
@@ -45,7 +45,7 @@ block content
           p Select from four place categories to populate the map. We'll add top rated locations close to your route. 
           h4 Generate Your Trip
           p Click generate to create an itinerary. You'll need to be patient, as Road Trip is working with Google and Yelp's data to generate and place markers on the map. 
-          p To learn more about how Road Trip works under the hood, click #[a(href="#") here].
+          p To learn more about how Road Trip works under the hood, click #[a(href="https://medium.com/@tsurantino/building-road-trip-35ede79e0a25") here].
           hr
           .text-center
             button.btn.btn-success(data-dismiss="modal") Sounds good, let's go!          
@@ -56,7 +56,6 @@ block extra_scripts
     // intro
     if(typeof(Storage) !== "undefined") {
       shownIntro = localStorage.getItem("shownIntro");
-      console.log(shownIntro);
       if (!shownIntro) {
         $('#intro').modal({show: true});
         localStorage.setItem("shownIntro", true);    
@@ -69,6 +68,7 @@ block extra_scripts
     var directionsDisplay;
     var directionsService = new google.maps.DirectionsService();
     var geocoder = new google.maps.Geocoder();
+    var total;
 
     var categories = {
       restaurant: 1,
@@ -185,6 +185,7 @@ block extra_scripts
     }
 
     function getNearbyPlaces(paths) {
+      $('.alert-default-progress').attr('style', 'width:0%');
       $('#loading-alert').fadeIn();
       $.ajax('/nearby-cities', {
         type: 'POST',
@@ -192,7 +193,6 @@ block extra_scripts
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data, status) {
-          console.log(status);
           addMarkers(data["results"]);
         },
         error: function(jqXHR, status, error) {
@@ -209,36 +209,25 @@ block extra_scripts
       for (var i = 0; i < results.length; i++) {
         for (var j = 0; j < results[i].length; j++) {
           total += 1;
-
-          //console.log(results[i][j]);
-          /*if (results[i][j].coords) {
-            function addCachedGeocode(location, delay) {
-              window.setTimeout(function() {
-                addMarker(location);
-              });
-            }
-            addCachedGeocode(results[i][j], total * 500);  
-          } else {*/
-          function addFreshGeocode(location, delay) {
-            window.setTimeout(function() {
-              geocodeViaNominatim(location.address, function(coords) {
-                location.coords = coords;
-                if (validPoint(location.coords[0], location.coords[1])) {
-                  addMarker(location);
-                  //cacheLocation(location);
-                }
-                else {
-                  total -= 1;
-                  updateProgress();
-                }
-              });
-            }, delay);
-          }
-
           addFreshGeocode(results[i][j], total * 1100);
-          //}
         }  
       }
+    }
+
+    function addFreshGeocode(location, delay) {
+      window.setTimeout(function() {
+        geocodeViaNominatim(location.address, function(coords) {
+          location.coords = coords;
+          if (validPoint(location.coords[0], location.coords[1])) {
+            addMarker(location);
+            //cacheLocation(location);
+          }
+          else {
+            total -= 1;
+            updateProgress();
+          }
+        });
+      }, delay);
     }
 
     function geocodeViaNominatim(address, cb) {
@@ -308,8 +297,8 @@ block extra_scripts
     }
 
     function updateProgress() {
+      //console.log('Progress: ', markers.length, total);
       $('.alert-default-progress').attr('style', 'width:' + markers.length / total * 100 + '%;')
-
       //$('#progress').show();
       //$('#current').html(markers.length);
       //$('#total').html(total);
@@ -390,17 +379,14 @@ block extra_scripts
 
     $('.select-category').click(function() {
       id = $(this).attr("id");
-      if ($(this).attr("data-status") == "on") {
+      if (categories[id] == 1) {
         $(this).attr('src', '/images/pins/' + id + '_marker_white.png');
-        $(this).attr("data-status", "off");
         categories[id] = 0;
       }
       else {
         $(this).attr('src', '/images/pins/' + id + '_marker.png');
-        $(this).attr("data-status", "on");
         categories[id] = 1;
       }
-      console.log(categories);
     });
 
     $(function () {
