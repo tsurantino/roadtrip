@@ -8,15 +8,16 @@ var Q = require('q');
 var cache = require('memory-cache');
 var sleep = require('sleep');
 var yelp = require("yelp").createClient({
-  consumer_key: "B6bWEcfpjbithTKt2uuGvg", 
-  consumer_secret: "fxEsn1IZ2-G2E4q-OrXp6B0jCew",
-  token: "EEAB9_3JVCCrMAnAHexPqPoCCRpEQ7Li",
-  token_secret: "g0F3MtRIHoV8bFSXyyfO4OyBCfg"
+  consumer_key: process.env.YELP_CONSUMER_KEY, 
+  consumer_secret: process.env.YELP_CONSUMER_SECRET,
+  token: process.env.YELP_TOKEN,
+  token_secret: process.env.YELP_TOKEN_SECRET
 });
 
 
 var locTree = require('./lib/locTree');
 locTree(function(locTree) {
+  // We run this test function to initialize the loc tree for later use
   console.log('Testing...')
   console.log(locTree.nearest({ x: 43.822014, y: -79.109414 }, 1, 10));
 })
@@ -35,11 +36,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 app.get('/', function(req, res, next) {
   res.render('index');
 });
 
 app.post('/nearby-cities', function(req, res) {
+  // this is maps the icon names/category selection to Yelp filters
   categoryToYelpFilter = {
     restaurant: 'food,restaurants',
     beer: 'nightlife',
@@ -49,9 +52,11 @@ app.post('/nearby-cities', function(req, res) {
   locTree(function (locTree) {
     unique_cities = {}
     req.body.paths.forEach(function(path) {
+      // Find a single nearest city within a 10 km radius 
       results = locTree.nearest({ x: path.x, y: path.y }, 1, 10);
       if (results.length > 0) {
         city = results[0][0].city;
+        // Add it to our unique_cities obj if it's not included
         if (!(city in unique_cities))
           unique_cities[city] = city;
       }
@@ -59,6 +64,8 @@ app.post('/nearby-cities', function(req, res) {
 
     queries = [];
     categoriesSelected = req.body.categories;
+    // For each unique city, for each unique category, create a Promise
+    // which queries the Yelp Search API for relevant businesses. 
     Object.keys(unique_cities).forEach(function(city) {
       Object.keys(categoriesSelected).forEach(function(category) {
         if (categoriesSelected[category] == 1) {
@@ -79,6 +86,7 @@ app.post('/nearby-cities', function(req, res) {
                 }
                 else {
                   if (data['businesses'] && data['businesses'].length > 0) {
+                    // For each business, cull unnecessary properties and format others
                     results = data['businesses'].map(function(business) {
                       return {
                         img_url: business.image_url,
@@ -103,7 +111,8 @@ app.post('/nearby-cities', function(req, res) {
         }
       });
     });
-
+    
+    // Execute all of the promises asynchronously, and then send the results back to the client
     Q.all(queries)
     .then(function(data) {
       res.json({'results': data})
