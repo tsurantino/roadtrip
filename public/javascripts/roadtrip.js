@@ -176,7 +176,7 @@ function addFreshGeocode(location, delay) {
 }
 
 function geocodeViaNominatim(address, cb) {
-  $.get('http://nominatim.openstreetmap.org/search?' + $.param({
+  $.get('http://open.mapquestapi.com/nominatim/v1/search.php?' + $.param({
       q: address,
       format: 'json',
       addressdetails: 1,
