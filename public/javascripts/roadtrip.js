@@ -33,14 +33,15 @@ function getLoc(next) {
 
 function initialize() {
   // autocomplete
+  placesOptions = { types: ['(cities)'], /*componentRestrictions: {country: "us"}*/};
   var from_autocomplete = new google.maps.places.Autocomplete(
     document.getElementById('from'), 
-    { types: ['(cities)'], }
+    placesOptions
   );
 
   var to_autocomplete = new google.maps.places.Autocomplete(
     document.getElementById('to'), 
-    { types: ['(cities)'], }
+    placesOptions
   );
 
   // map
