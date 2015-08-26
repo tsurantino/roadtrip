@@ -191,8 +191,9 @@ function geocodeViaNominatim(address, cb) {
   });
 }
 
+var infoWindow;
 function addMarker(location) {
-  var infoWindow = new google.maps.InfoWindow({
+  infoWindow = new google.maps.InfoWindow({
     content:
       '<div class="container-fluid">' +
         '<h3>' + location.name + '</h3>' +
@@ -216,7 +217,6 @@ function addMarker(location) {
         '</div>' +
       '</div>'
   });
-
   var marker = new google.maps.Marker({
     position: new google.maps.LatLng(location.coords[0], location.coords[1]),
     map: map,
@@ -226,6 +226,7 @@ function addMarker(location) {
   });
 
   google.maps.event.addListener(marker, 'click', function() {
+    if (infoWindow) infoWindow.close();
     infoWindow.open(map, marker);
   });
 
